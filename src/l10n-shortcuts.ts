@@ -11,7 +11,7 @@ type ShortcutLocalization = {
   [locale: string]: Partial<Shortcuts>;
 };
 
-const SHORTCUT_LOCALISATION = {
+const SHORTCUT_LOCALISATION: ShortcutLocalization = {
   en: {
     yes: "y",
     no: "n",

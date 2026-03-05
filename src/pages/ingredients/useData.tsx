@@ -27,6 +27,43 @@ const getIngredientExtractionUrl = (base: string, id: string) => {
   return `${ROBOTOFF_API_URL}/predict/ingredient_list?ocr_url=${base}${id}.json`;
 };
 
+type ImageData = {
+  imgid?: string;
+  geometry?: string;
+  sizes?: {
+    full?: {
+      w?: number | string;
+      h?: number | string;
+    };
+  };
+  uploaded_t?: number;
+  uploader?: string;
+  x1?: number;
+  x2?: number;
+  y1?: number;
+  y2?: number;
+};
+
+type ImagesMap = Record<string, ImageData>;
+
+type SelectedImage = {
+  imgId: string;
+  countryCode: string;
+  imageUrl: string;
+  fetchDataUrl: string;
+  uploaded_t?: number;
+  uploader?: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  x1?: number;
+  x2?: number;
+  y1?: number;
+  y2?: number;
+  geometry?: string;
+};
+
 const formatData = ({
   code,
   lang,
@@ -41,25 +78,30 @@ const formatData = ({
   lang: string;
   image_ingredients_url: string;
   product_name: string;
-  ingredient: any;
-  images: any;
-  scans_n: any;
+  ingredient: unknown;
+  images?: ImagesMap;
+  scans_n: unknown;
   [x: string]: unknown;
 }) => {
   const baseImageUrl = image_ingredients_url.replace(/ingredients.*/, "");
+  const imageMap = images ?? {};
 
-  const selectedImages = Object.keys(images)
+  const selectedImages = Object.keys(imageMap)
     .filter((key) => key.startsWith("ingredients"))
-    .map((key) => {
-      const imageData = images[key];
+    .map<SelectedImage | null>((key) => {
+      const imageData = imageMap[key];
+      if (!imageData?.imgid || !imageData.geometry) {
+        return null;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [_, x, y] = images[key].geometry.split("-");
+      const [_, x = "0", y = "0"] = imageData.geometry.split("-");
 
       const countryCode = key.startsWith("ingredients_")
         ? key.slice("ingredients_".length)
         : "";
 
-      const { uploaded_t, uploader } = images[imageData.imgid];
+      const { uploaded_t, uploader } = imageMap[imageData.imgid] ?? {};
       return {
         imgId: imageData.imgid,
         countryCode,
@@ -72,16 +114,17 @@ const formatData = ({
         uploader,
         x: Number.parseFloat(x),
         y: Number.parseFloat(y),
-        w: Number.parseFloat(imageData.sizes.full.w),
-        h: Number.parseFloat(imageData.sizes.full.h),
-        x1: images[key].x1,
-        x2: images[key].x2,
-        y1: images[key].y1,
-        y2: images[key].y2,
-        geometry: images[key].geometry,
+        w: Number.parseFloat(String(imageData.sizes?.full?.w ?? 0)),
+        h: Number.parseFloat(String(imageData.sizes?.full?.h ?? 0)),
+        x1: imageData.x1,
+        x2: imageData.x2,
+        y1: imageData.y1,
+        y2: imageData.y2,
+        geometry: imageData.geometry,
       };
-    });
-  const ingredientTexts = {};
+    })
+    .filter((item): item is SelectedImage => item !== null);
+  const ingredientTexts: Record<string, unknown> = {};
   Object.entries(other).forEach(([key, value]) => {
     if (key.startsWith("ingredient")) {
       ingredientTexts[key] = value;
@@ -100,8 +143,12 @@ const formatData = ({
   };
 };
 
-export default function useData(countryCode): [any[], () => void, boolean] {
-  const [data, setData] = React.useState([]);
+type FormattedProduct = ReturnType<typeof formatData>;
+
+export default function useData(
+  countryCode: string,
+): [FormattedProduct[], () => void, boolean] {
+  const [data, setData] = React.useState<FormattedProduct[]>([]);
   const prevCountry = React.useRef(countryCode);
   const [isLoading, setIsLoading] = React.useState(true);
   const [page, setPage] = React.useState(() => {
@@ -109,7 +156,7 @@ export default function useData(countryCode): [any[], () => void, boolean] {
     // Seems that API fails for large page number
     //return new Date().getMilliseconds() % 50;
   });
-  const seenCodes = React.useRef([]);
+  const seenCodes = React.useRef<Record<string, boolean>>({});
 
   React.useEffect(() => {
     let isValid = true;

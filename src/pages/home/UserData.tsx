@@ -74,18 +74,39 @@ const UserData = ({ userName }) => {
   const { t } = useTranslation();
 
   const [data, setData] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loadedUserName, setLoadedUserName] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
+    let isActive = true;
+
     fetchUserData(userName)
-      .then((counts) => setData(counts))
-      .catch(() => {
-        setError("Failed to fetch user data");
+      .then((counts) => {
+        if (!isActive) {
+          return;
+        }
+
+        setData(counts);
+        setError(null);
+        setLoadedUserName(userName);
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!isActive) {
+          return;
+        }
+
+        setError("Failed to fetch user data");
+        setLoadedUserName(userName);
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [userName]);
+
+  const scopedError = loadedUserName === userName ? error : null;
+  const loading = loadedUserName !== userName;
+  const scopedData = loadedUserName === userName ? data : {};
 
   return (
     <Box sx={{ p: 2, mb: 10 }}>
@@ -103,11 +124,11 @@ const UserData = ({ userName }) => {
         >
           <CircularProgress />
         </Box>
-      ) : error ? (
-        <Typography color="error">{error}</Typography>
+      ) : scopedError ? (
+        <Typography color="error">{scopedError}</Typography>
       ) : (
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          {Object.entries(data).map(([countType, value]) => (
+          {Object.entries(scopedData).map(([countType, value]) => (
             <CountCard
               key={countType}
               translationKey={countType}

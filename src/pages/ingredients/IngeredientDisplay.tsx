@@ -69,40 +69,48 @@ function ColorText({
     ({ ingredients, ...ingredient }) => [ingredient, ...(ingredients || [])],
   );
 
-  let lastIndex = 0;
-
-  return [
-    ...flattendIngredients.map((ingredient, i) => {
+  const { nodes, lastIndex } = flattendIngredients.reduce<{
+    lastIndex: number;
+    nodes: React.ReactNode[];
+  }>(
+    (acc, ingredient, i) => {
       // Don't ask me why OFF use this specific character
       const ingredientText = ingredient.text.replace("‚", ",").toLowerCase();
 
-      const startIndex = text.toLowerCase().indexOf(ingredientText, lastIndex);
+      const startIndex = text
+        .toLowerCase()
+        .indexOf(ingredientText, acc.lastIndex);
       if (startIndex < 0) {
-        return null;
+        return acc;
       }
       const endIndex = startIndex + ingredient.text.length;
 
-      const prefix = text.slice(lastIndex, startIndex);
+      const prefix = text.slice(acc.lastIndex, startIndex);
       const ingredientName = text.slice(startIndex, endIndex);
-      lastIndex = endIndex;
 
-      return (
-        <React.Fragment key={i}>
-          <span>{prefix}</span>
+      return {
+        lastIndex: endIndex,
+        nodes: [
+          ...acc.nodes,
+          <React.Fragment key={i}>
+            <span>{prefix}</span>
 
-          <Tooltip title={getTitle(ingredient)} enterDelay={500}>
-            <span style={{ color: getColor(ingredient) }}>
-              {ingredientName}
-            </span>
-          </Tooltip>
-        </React.Fragment>
-      );
-    }),
-    text.slice(lastIndex, text.length),
-  ];
+            <Tooltip title={getTitle(ingredient)} enterDelay={500}>
+              <span style={{ color: getColor(ingredient) }}>
+                {ingredientName}
+              </span>
+            </Tooltip>
+          </React.Fragment>,
+        ],
+      };
+    },
+    { lastIndex: 0, nodes: [] },
+  );
+
+  return [...nodes, text.slice(lastIndex)];
 }
 
-export function useIngredientParsing() {
+function useIngredientParsing() {
   const [isLoading, setLoading] = React.useState(false);
   const [parsings, setParsing] = React.useState({});
 

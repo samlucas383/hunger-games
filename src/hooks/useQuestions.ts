@@ -71,7 +71,7 @@ export function useQuestionsQuery(valueTag: string) {
     return data;
   };
 
-  const { data, status, isFetching } = useQuery({
+  const { data, status } = useQuery({
     queryKey: getQuestionKeys({ ...filterParams, valueTag }),
     queryFn: fetchQuestions,
   });
@@ -96,7 +96,10 @@ export default function useQuestions(
   const [filterParams] = useFilterState();
 
   // Fallback on searchParams if not provided to the hook.
-  const params = { ...(inParams ?? filterParams), ...forcedParams };
+  const params = React.useMemo(
+    () => ({ ...(inParams ?? filterParams), ...forcedParams }),
+    [inParams, filterParams, forcedParams],
+  );
 
   const queryClient = useQueryClient();
 
@@ -120,6 +123,37 @@ export default function useQuestions(
   };
 
   const keys = React.useMemo(() => getQuestionKeys(params), [params]);
+
+  const mutation = useMutation({
+    mutationFn: async (keys: (string | boolean)[]) => {
+      void keys;
+      return await fetchQuestions();
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<{
+        questions: QuestionInterface[];
+        count: number;
+      }>(variables, (currentQuestions) => {
+        if (!currentQuestions) {
+          return {
+            questions: data.questions,
+            count: data.count,
+          };
+        }
+
+        const seenIds = new Set([
+          ...currentQuestions.questions.map((q) => q.insight_id),
+        ]);
+        return {
+          questions: [
+            ...currentQuestions.questions,
+            ...data.questions.filter((q) => !seenIds.has(q.insight_id)),
+          ],
+          count: data.count,
+        };
+      });
+    },
+  });
 
   const answerQuestion = React.useCallback(
     ({ question, answer }: AnswerQuestionParams) => {
@@ -166,45 +200,16 @@ export default function useQuestions(
 
       matomoTrackAnswerQuestions(answer);
     },
-    [],
+    [keys, matomoTrackAnswerQuestions, mutation, queryClient],
   );
 
   const { data: recentAnswers } = useQuery({
     queryKey: ["recent-answers"],
     queryFn: (): AnsweredQuestion[] => [],
   });
-  const { data, status, isFetching } = useQuery({
+  const { data, status } = useQuery({
     queryKey: keys,
     queryFn: fetchQuestions,
-  });
-  const mutation = useMutation({
-    mutationFn: async (keys: (string | boolean)[]) => {
-      return await fetchQuestions();
-    },
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<{
-        questions: QuestionInterface[];
-        count: number;
-      }>(variables, (currentQuestions) => {
-        if (!currentQuestions) {
-          return {
-            questions: data.questions,
-            count: data.count,
-          };
-        }
-
-        const seenIds = new Set([
-          ...currentQuestions.questions.map((q) => q.insight_id),
-        ]);
-        return {
-          questions: [
-            ...currentQuestions.questions,
-            ...data.questions.filter((q) => !seenIds.has(q.insight_id)),
-          ],
-          count: data.count,
-        };
-      });
-    },
   });
 
   const questions = data?.questions ?? [];

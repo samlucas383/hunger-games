@@ -36,7 +36,7 @@ export const localSettings = {
 
     try {
       storedValue = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       /* empty */
     }

@@ -18,12 +18,12 @@ type Packaging = {
 
 type ProductDescription = {
   code: number;
-  states: any;
+  states: unknown;
   lang: string;
   image_packaging_url: string;
   packagings: Packaging[];
   product_name: string;
-  images: any;
+  images: Record<string, unknown>;
   creator: string;
 };
 function getProductsToAnnotateUrl({

@@ -113,29 +113,39 @@ const MultiPagesButton = ({
   toggleIsOpen: () => void;
 }) => {
   const { t } = useTranslation();
-  const anchorEl = React.useRef(null);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+
+  const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+    toggleIsOpen();
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    toggleIsOpen();
+  };
+
   return (
     <>
       <Button
-        ref={anchorEl}
         color="inherit"
         key={translationKey}
-        onClick={toggleIsOpen}
+        onClick={handleToggle}
         sx={{ my: 2, display: "block" }}
       >
         {t(translationKey)}
       </Button>
       <Menu
-        anchorEl={anchorEl.current}
+        anchorEl={anchorEl}
         open={isOpen}
-        onClose={toggleIsOpen}
+        onClose={handleClose}
         sx={{ display: { xs: "none", md: "flex" } }}
       >
         {children.map((subPage) => (
           <MenuItem
             sx={{ pl: 4 }}
             key={subPage.translationKey}
-            onClick={toggleIsOpen}
+            onClick={handleClose}
             {...(isExternalUrl(subPage.url)
               ? { component: "a", target: "_blank", href: subPage.url }
               : { component: Link, to: `/${subPage.url}` })}

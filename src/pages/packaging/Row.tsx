@@ -9,7 +9,7 @@ import { Option } from "../../hooks/useOptions";
 type CustomProps = {
   options: Option[];
   value: Option | null;
-  onChange: any;
+  onChange: (event: React.SyntheticEvent, newValue: Option | null) => void;
 };
 
 /**

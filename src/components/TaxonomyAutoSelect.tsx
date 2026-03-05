@@ -46,7 +46,7 @@ export default function TaxonomyAutoSelect(props: TaxonomyAutoSelectProps) {
         },
         400,
       ),
-    [language],
+    [language, taxonomy],
   );
 
   React.useEffect(() => {
@@ -94,7 +94,7 @@ export default function TaxonomyAutoSelect(props: TaxonomyAutoSelectProps) {
       }
       isOptionEqualToValue={isOptionEqualToValue}
       // noOptionsText="No locations"
-      onChange={(event: any, newValue: TaxonomyItem | null | string) => {
+      onChange={(_event: React.SyntheticEvent, newValue: TaxonomyItem | null | string) => {
         if (typeof newValue === "object") {
           onChange(newValue.text, newValue);
           setSelectedValue(newValue);

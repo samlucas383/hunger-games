@@ -22,6 +22,11 @@ import { useFilterState } from "../../../hooks/useFilterState";
 import NoMoreLogos from "./NoMoreLogos";
 import { LogoQuestionCard } from "./LogoQuestionCard";
 
+type ControlledState = {
+  imageSize: number | string;
+  zoomOnLogo: boolean | string;
+};
+
 function LogoQuestionValidator() {
   const { t } = useTranslation();
 
@@ -195,9 +200,9 @@ function LogoQuestionValidator() {
             aria-label={t("nutriscore.image_sizes")}
             value={imageSize}
             onChangeCommitted={(event, newValue) =>
-              setControlledState((prev: any) => ({
+              setControlledState((prev: ControlledState) => ({
                 ...prev,
-                imageSize: newValue,
+                imageSize: Array.isArray(newValue) ? newValue[0] : newValue,
               }))
             }
             valueLabelDisplay="auto"
@@ -214,7 +219,7 @@ function LogoQuestionValidator() {
             <Checkbox
               checked={zoomOnLogo}
               onChange={(event) =>
-                setControlledState((prev: any) => ({
+                setControlledState((prev: ControlledState) => ({
                   ...prev,
                   zoomOnLogo: event.target.checked,
                 }))
