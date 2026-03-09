@@ -41,6 +41,8 @@ jobs:
   build-and-deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
 
     permissions:
       pages: write
