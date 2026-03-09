@@ -5,11 +5,14 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  pull_request_review:
+    types: [submitted]
   workflow_dispatch:
 
 jobs:
   lint:
     name: Lint
+    if: github.event_name != 'pull_request_review'
     runs-on: ubuntu-latest
 
     steps:
@@ -40,6 +43,7 @@ jobs:
 
   build-and-deploy:
     name: Build and Deploy
+    if: github.event_name != 'pull_request_review'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -92,3 +96,31 @@ jobs:
         if: github.ref == 'refs/heads/master'
         id: deployment
         uses: actions/deploy-pages@v4
+
+  cloud-build-on-approval:
+    name: Cloud Build On Approval
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.base.ref == 'master'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/205038419480/locations/global/workloadIdentityPools/hunger-games-cloud-pool/providers/github-provider
+          service_account: github-deployer@hunger-games-cloud.iam.gserviceaccount.com
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: hunger-games-cloud
+
+      - name: Trigger Google Cloud Build
+        run: gcloud builds submit --project=hunger-games-cloud --config=cloudbuild.yaml .

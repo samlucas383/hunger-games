@@ -1,0 +1,8 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "Dockerfile.ci", "-t", "hunger-games-ci:$SHORT_SHA", "."]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["run", "--rm", "hunger-games-ci:$SHORT_SHA", "bash", "-lc", "yarn lint && yarn build"]
+
+timeout: "1800s"
