@@ -1,1 +1,4 @@
-yarn prettier
+yarn prettier 2>/dev/null || yarn.cmd prettier 2>/dev/null || corepack yarn prettier 2>/dev/null || corepack.cmd yarn prettier 2>/dev/null || npm run prettier || npm.cmd run prettier || {
+	echo "No supported package runner found (yarn/corepack/npm)."
+	exit 127
+}

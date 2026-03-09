@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMatomo } from "@jonkoops/matomo-tracker-react";
 import axios from "axios";
 
-import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import DevModeContext from "./contexts/devMode";
 import {
   getColor,
@@ -22,6 +21,10 @@ import ColorModeContext from "./contexts/colorMode";
 
 import Loader from "./pages/loader";
 import { CountryProvider } from "./contexts/CountryProvider";
+
+const ResponsiveAppBar = React.lazy(
+  () => import("./components/ResponsiveAppBar"),
+);
 
 const GreenScorePage = React.lazy(() => import("./pages/green-score"));
 const LogoAnnotationPage = React.lazy(

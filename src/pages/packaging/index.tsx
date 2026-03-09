@@ -18,11 +18,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import axios from "axios";
 
-import Row from "./Row";
 import { useBuffer } from "./useBuffer";
 import { useOptions } from "../../hooks/useOptions";
 import { getLang } from "../../localeStorageManager";
-import ZoomableImage from "../../components/ZoomableImage";
 import { getImagesUrls } from "../questions/utils";
 import offService from "../../off";
 import { OFF_API_URL_V3 } from "../../const";
@@ -31,6 +29,11 @@ import useUrlParams from "../../hooks/useUrlParams";
 import Loader from "../loader";
 import { useCountry } from "../../contexts/CountryProvider";
 import { getCountryId } from "../../utils/getCountryId";
+
+const Row = React.lazy(() => import("./Row"));
+const ZoomableImage = React.lazy(
+  () => import("../../components/ZoomableImage"),
+);
 const formatData = (innerRows) => {
   const packagings = innerRows
     .map(({ material, number, recycling, shape }) => {

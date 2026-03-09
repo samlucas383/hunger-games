@@ -3,9 +3,14 @@ import { useRobotoffPredictions } from "./useRobotoffPredictions";
 
 import { Box, Typography } from "@mui/material";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
-import ShowImage from "./ShowImage";
 // import LinksToProduct from "../nutrition/LinksToProduct";
-import { TextCorrection } from "./TextCorrection/TextCorrection";
+
+const ShowImage = React.lazy(() => import("./ShowImage"));
+const TextCorrection = React.lazy(() =>
+  import("./TextCorrection/TextCorrection").then((module) => ({
+    default: module.TextCorrection,
+  })),
+);
 
 export default function Nutrition() {
   const { isLoading, insight, nextItem, product } = useRobotoffPredictions();
@@ -20,7 +25,7 @@ export default function Nutrition() {
   }
 
   return (
-    <React.Suspense>
+    <React.Suspense fallback={<Typography>Loading...</Typography>}>
       <ErrorBoundary>
         <Box sx={{ display: "flex" }}>
           <Box sx={{ width: "50%" }}>

@@ -10,14 +10,19 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Link from "@mui/material/Link";
 import { useCountry } from "../../contexts/CountryProvider";
-import { MapInteractionCSS } from "react-map-interaction";
 
 import Loader from "../loader";
 import off from "../../off";
 import { useTranslation } from "react-i18next";
 import useData from "./useData";
-import ImageAnnotation from "./ImageAnnotation";
 import { OFF_URL } from "../../const";
+
+const ImageAnnotation = React.lazy(() => import("./ImageAnnotation"));
+const MapInteractionCSS = React.lazy(() =>
+  import("react-map-interaction").then((module) => ({
+    default: module.MapInteractionCSS,
+  })),
+);
 
 function ProductInterface(props) {
   const { product, next } = props;

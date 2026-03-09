@@ -1,0 +1,15 @@
+FROM node:24.12.0-bookworm-slim
+
+WORKDIR /workspace
+ENV CI=true
+
+# Match CI package manager behavior.
+RUN corepack enable && corepack prepare yarn@4.9.2 --activate
+
+# Install dependencies first to improve layer caching.
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
+
+# Copy project and run the same checks as CI.
+COPY . .
+CMD ["bash", "-lc", "yarn lint && yarn build"]
